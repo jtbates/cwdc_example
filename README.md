@@ -6,10 +6,12 @@ regular search path is not polluted.
 
 To build the library issue the command 
 
-   torch-pkg deploy
-   
+
+    torch-pkg deploy
+
+
 You can then run the script
 
-   torch run.lua
+    torch run.lua
    
 and it will call your C extensions.
