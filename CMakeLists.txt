@@ -1,0 +1,42 @@
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
+CMAKE_POLICY(VERSION 2.6)
+FIND_PACKAGE(Torch REQUIRED)
+FIND_PACKAGE(OpenMP)
+
+IF (OPENMP_FOUND)
+  MESSAGE (STATUS "OpenMP Found with compiler flag : ${OpenMP_C_FLAGS}")
+  SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+ENDIF (OPENMP_FOUND)
+
+SET(src init.c)
+FILE(GLOB luasrc *.lua)
+SET(package cwdc)
+IF(ADD_AS_PACKAGE)
+    ADD_TORCH_PACKAGE(${package} "${src}" "${luasrc}" "Compiled C from current working dir")
+ELSE(ADD_AS_PACKAGE)
+    INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${Torch_SOURCE_INCLUDES})
+
+    ### C/C++ sources
+    IF(src)      
+
+        ADD_LIBRARY(${package} SHARED ${src})
+
+        SET_TARGET_PROPERTIES(${package} PROPERTIES
+          PREFIX "lib"
+          IMPORT_PREFIX "lib"
+          INSTALL_NAME_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+        INSTALL(TARGETS ${package} 
+          RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+          LIBRARY DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+
+    ENDIF(src)
+      
+    CONFIGURE_FILE("init.lua" "${package}.lua")
+    INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/${package}.lua"
+        DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+
+ENDIF(ADD_AS_PACKAGE)
+
+TARGET_LINK_LIBRARIES(${package} luaT TH)
